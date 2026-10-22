@@ -66,61 +66,8 @@ The seed script creates two test personas:
 ---
 
 ## 🗄 Database Design & Schema Diagram
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/bde5ee31-cf86-463f-98dd-4cfbb35b0812" />
 
-```
-+-------------------------------------------------------------+
-|                          users                              |
-+-------------------------------------------------------------+
-| id             : INTEGER PRIMARY KEY AUTOINCREMENT          |
-| name           : TEXT NOT NULL                              |
-| email          : TEXT UNIQUE NOT NULL                       |
-| password_hash  : TEXT NOT NULL                              |
-| role           : TEXT NOT NULL ('customer' | 'admin')       |
-| created_at     : DATETIME DEFAULT CURRENT_TIMESTAMP         |
-+-------------------------------------------------------------+
-                              |
-                              | 1 to N
-                              v
-+-------------------------------------------------------------+
-|                        bookings                             |
-+-------------------------------------------------------------+
-| id             : INTEGER PRIMARY KEY AUTOINCREMENT          |
-| user_id        : INTEGER REFERENCES users(id)               |
-| show_id        : INTEGER REFERENCES shows(id)               |
-| total_amount   : REAL NOT NULL                              |
-| status         : TEXT ('confirmed' | 'cancelled')           |
-| created_at     : DATETIME DEFAULT CURRENT_TIMESTAMP         |
-+-------------------------------------------------------------+
-       ^                      ^
-       |                      | 1 to N
-       |                      |
-+-----------------------------+-------------------------------+
-|                         shows                               |
-+-------------------------------------------------------------+
-| id             : INTEGER PRIMARY KEY AUTOINCREMENT          |
-| movie_id       : INTEGER REFERENCES movies(id)              |
-| show_date      : TEXT NOT NULL ('YYYY-MM-DD')               |
-| start_time     : TEXT NOT NULL ('HH:MM')                    |
-| ticket_price   : REAL NOT NULL                              |
-| created_at     : DATETIME DEFAULT CURRENT_TIMESTAMP         |
-+-------------------------------------------------------------+
-       ^                      ^
-       |                      | 1 to 80 seats per show
-       |                      v
-+-------------------------------------------------------------+
-|                       show_seats                            |
-+-------------------------------------------------------------+
-| id             : INTEGER PRIMARY KEY AUTOINCREMENT          |
-| show_id        : INTEGER REFERENCES shows(id)               |
-| seat_number    : TEXT NOT NULL (e.g. 'A1', 'C4')            |
-| status         : TEXT ('available' | 'held' | 'booked')     |
-| held_by_user_id: INTEGER REFERENCES users(id)               |
-| held_until     : INTEGER (Unix timestamp in ms)             |
-| booking_id     : INTEGER REFERENCES bookings(id)            |
-|                                                             |
-| CONSTRAINT     : UNIQUE(show_id, seat_number)               |
-+-------------------------------------------------------------+
-```
 
 ---
 
