@@ -4,16 +4,14 @@
  * ============================================================================
  *
  * Implements Flow 2: Browse movies and shows
- * Acceptance Criteria:
- * - Shows movie synopsis, rating, language, and runtime
- * - Lists upcoming shows grouped by date
- * - Shows that have already started are NOT listed (filtered by backend query)
- * - Each show displays how many seats are still available (e.g. "76 / 80 seats available")
- * - Clicking a show navigates to the Seat Map for booking
+ * Features:
+ * - High-contrast light typography on deep obsidian glass
+ * - Backdrop poster with ambient lighting
+ * - Dates and showtimes with luminous seat availability badges
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, Globe, Calendar, Ticket, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Globe, Calendar, Ticket, AlertCircle, Sparkles, Film } from 'lucide-react';
 import { Movie, Show } from '../types.js';
 import { api } from '../api.js';
 
@@ -28,25 +26,12 @@ export const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({
   onBack,
   onSelectShow
 }) => {
-  // `useState` Hook: Holds the movie details object
   const [movie, setMovie] = useState<Movie | null>(null);
-
-  // `useState` Hook: Holds shows grouped by date: { "2026-10-23": [show1, show2] }
   const [showsByDate, setShowsByDate] = useState<Record<string, Show[]>>({});
-
-  // `useState` Hook: Loading indicator
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  // `useState` Hook: Error message if movie fetch fails
   const [error, setError] = useState<string | null>(null);
-
-  // `useState` Hook: Tracks image loading failure
   const [imgError, setImgError] = useState<boolean>(false);
 
-  /**
-   * `useEffect` Hook:
-   * Fetches movie details and its upcoming shows from GET /api/movies/:id
-   */
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
@@ -64,26 +49,26 @@ export const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({
     };
 
     fetchMovieDetails();
-  }, [movieId]); // Re-run if movieId changes
+  }, [movieId]);
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-16 text-center text-slate-400 animate-pulse">
-        <div className="h-8 w-48 bg-slate-800 rounded mx-auto mb-4" />
-        <p className="text-sm">Loading showtimes and movie details...</p>
+      <div className="max-w-5xl mx-auto px-4 py-20 text-center text-slate-300 animate-pulse">
+        <div className="h-8 w-48 bg-slate-800 rounded-xl mx-auto mb-4" />
+        <p className="text-sm font-semibold">Loading movie details & showtimes...</p>
       </div>
     );
   }
 
   if (error || !movie) {
     return (
-      <div className="max-w-md mx-auto my-16 p-6 bg-slate-900 border border-slate-800 rounded-2xl text-center space-y-4">
+      <div className="max-w-md mx-auto my-20 p-8 bg-[#0d1322] border border-white/[0.08] rounded-3xl text-center space-y-4">
         <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
         <h3 className="text-lg font-bold text-white">Movie Not Found</h3>
         <p className="text-xs text-slate-400">{error || 'Could not find this movie.'}</p>
         <button
           onClick={onBack}
-          className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg"
+          className="px-5 py-2.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl"
         >
           Return to Movies
         </button>
@@ -100,22 +85,22 @@ export const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({
   const dates = Object.keys(showsByDate).sort();
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
       
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors p-1"
+        className="inline-flex items-center gap-2 text-sm font-bold text-slate-300 hover:text-white transition-colors p-1"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 text-amber-400" />
         <span>Back to All Movies</span>
       </button>
 
-      {/* Movie Hero Banner Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row gap-8 items-start">
+      {/* Movie Hero Card */}
+      <div className="bg-[#0b101d]/90 border border-white/[0.09] rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row gap-8 items-start relative overflow-hidden">
         
         {/* Poster Image */}
-        <div className="w-full md:w-56 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden bg-slate-800 shadow-xl border border-slate-700">
+        <div className="w-full md:w-64 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden bg-slate-950 shadow-[0_10px_30px_rgba(0,0,0,0.8)] border border-white/[0.1] relative">
           <img
             src={imgError || !movie.poster_url ? 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&auto=format&fit=crop&q=80' : movie.poster_url}
             alt={movie.title}
@@ -124,32 +109,35 @@ export const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({
           />
         </div>
 
-        {/* Synopsis and Metadata */}
-        <div className="flex-1 space-y-4">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+        {/* Synopsis & Details */}
+        <div className="flex-1 space-y-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/30 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
               {movie.rating}
             </span>
-            <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-slate-400" />
+            <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#151c2e] text-slate-200 border border-white/[0.08] flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-amber-400" />
               {movie.language}
             </span>
-            <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#151c2e] text-slate-200 border border-white/[0.08] flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
               {formatDuration(movie.duration_mins)}
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
             {movie.title}
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-3xl">
             {movie.description || 'No description available for this movie.'}
           </p>
 
-          <div className="pt-2 text-xs text-slate-400 border-t border-slate-800 flex items-center gap-2">
-            <span className="font-semibold text-amber-400">Single Screen Cinema</span>
+          <div className="pt-4 border-t border-white/[0.08] flex items-center gap-4 text-xs font-semibold text-slate-400">
+            <span className="text-amber-400 flex items-center gap-1.5 font-bold">
+              <Film className="w-4 h-4" />
+              Screen 1 (Single Screen Cinema)
+            </span>
             <span>•</span>
             <span>80 Seats per Show</span>
           </div>
@@ -157,18 +145,18 @@ export const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({
 
       </div>
 
-      {/* Upcoming Shows Grouped by Date (Flow 2 Acceptance Criteria) */}
+      {/* Upcoming Shows Grouped by Date (Flow 2) */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2.5">
+        <h2 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
           <Calendar className="w-6 h-6 text-amber-400" />
-          <span>Upcoming Showtimes</span>
+          <span>Available Showtimes</span>
         </h2>
 
         {dates.length === 0 ? (
-          <div className="p-8 bg-slate-900 border border-slate-800 rounded-2xl text-center space-y-2">
-            <Ticket className="w-10 h-10 text-slate-600 mx-auto" />
-            <h4 className="text-base font-semibold text-slate-300">No Upcoming Shows</h4>
-            <p className="text-xs text-slate-500">
+          <div className="p-10 bg-[#0d1322] border border-white/[0.08] rounded-3xl text-center space-y-2">
+            <Ticket className="w-12 h-12 text-slate-600 mx-auto" />
+            <h4 className="text-lg font-bold text-white">No Upcoming Shows</h4>
+            <p className="text-xs text-slate-400">
               There are currently no upcoming shows scheduled for this movie. Check back soon!
             </p>
           </div>
@@ -184,18 +172,19 @@ export const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({
               });
 
               return (
-                <div key={dateStr} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                    <span className="text-sm font-bold text-amber-400 uppercase tracking-wide">
+                <div key={dateStr} className="bg-[#0b101d]/90 border border-white/[0.08] rounded-3xl p-6 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                    <span className="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
                       {formattedDate}
                     </span>
-                    <span className="text-xs text-slate-500 font-mono">
+                    <span className="text-xs text-slate-400 font-mono font-semibold bg-white/[0.05] px-2.5 py-1 rounded-lg">
                       {dateStr}
                     </span>
                   </div>
 
                   {/* Showtimes for this date */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
                     {showList.map((show) => {
                       const availableSeats = show.available_seats ?? 80;
                       const isSoldOut = availableSeats === 0;
@@ -204,33 +193,33 @@ export const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({
                         <div
                           key={show.id}
                           onClick={() => !isSoldOut && onSelectShow(show.id)}
-                          className={`p-4 rounded-xl border transition-all duration-200 flex items-center justify-between ${
+                          className={`p-5 rounded-2xl border transition-all duration-200 flex items-center justify-between ${
                             isSoldOut
-                              ? 'bg-slate-950 border-slate-800/80 opacity-60 cursor-not-allowed'
-                              : 'bg-slate-800/70 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/60 cursor-pointer hover:shadow-lg'
+                              ? 'bg-slate-950 border-white/[0.04] opacity-50 cursor-not-allowed'
+                              : 'bg-[#12192c] hover:bg-[#18213a] border-white/[0.08] hover:border-amber-400/60 cursor-pointer hover:shadow-[0_8px_25px_rgba(245,158,11,0.18)] hover:scale-[1.02]'
                           }`}
                         >
                           <div>
-                            <span className="text-xl font-black text-white font-mono tracking-tight block">
+                            <span className="text-2xl font-black text-white font-mono tracking-tight block">
                               {show.start_time}
                             </span>
-                            <span className="text-xs font-semibold text-amber-400">
-                              ₹{show.ticket_price}
+                            <span className="text-xs font-bold text-amber-400">
+                              ₹{show.ticket_price} <span className="text-[10px] text-slate-400 font-normal">/ seat</span>
                             </span>
                           </div>
 
                           <div className="text-right">
-                            <span className={`inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                            <span className={`inline-block px-3 py-1 rounded-xl text-xs font-black ${
                               isSoldOut
-                                ? 'bg-rose-500/20 text-rose-400'
+                                ? 'bg-rose-500/20 text-rose-300'
                                 : availableSeats < 15
-                                ? 'bg-amber-500/20 text-amber-400 animate-pulse'
-                                : 'bg-emerald-500/20 text-emerald-400'
+                                ? 'bg-amber-500/20 text-amber-300 animate-pulse'
+                                : 'bg-emerald-500/20 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
                             }`}>
                               {isSoldOut ? 'Sold Out' : `${availableSeats}/80 Free`}
                             </span>
-                            <span className="block text-[10px] text-slate-500 mt-0.5">
-                              {isSoldOut ? 'No seats left' : 'Click to select seats'}
+                            <span className="block text-[11px] font-semibold text-slate-400 mt-1">
+                              {isSoldOut ? 'No seats left' : 'Select Seats →'}
                             </span>
                           </div>
                         </div>
