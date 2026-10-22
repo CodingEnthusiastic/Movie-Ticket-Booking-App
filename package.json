@@ -1,0 +1,16 @@
+{
+  "name": "yozigo-cinema-booking-app",
+  "version": "1.0.0",
+  "description": "Full-stack movie ticket booking web app with atomic seat holding, zero double booking, and live WebSocket updates.",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "seed": "npm --prefix backend run seed",
+    "test": "npm --prefix backend test",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build"
+  },
+  "keywords": ["movie-booking", "react", "typescript", "express", "sqlite", "socketio"],
+  "author": "Yozigo Hiring Candidate",
+  "license": "ISC"
+}
