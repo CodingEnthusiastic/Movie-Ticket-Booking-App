@@ -78,6 +78,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       return;
     }
 
+    if (!seats || seats.length === 0) {
+      setErrorMessage('No seats are currently selected. Please choose at least 1 seat.');
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage(null);
 
@@ -154,7 +159,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="flex justify-between">
             <span className="text-slate-400 font-medium">Seats</span>
             <span className="font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-              {seats.join(', ')}
+              {seats && seats.length > 0 ? seats.join(', ') : 'None'}
             </span>
           </div>
           <div className="pt-3 border-t border-white/[0.08] flex justify-between items-center text-sm sm:text-base font-bold">
@@ -201,7 +206,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
             <button
               type="button"
-              disabled={isExpired || isProcessing}
+              disabled={isExpired || isProcessing || !seats || seats.length === 0}
               onClick={handleSuccessClick}
               className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:from-slate-800 disabled:to-slate-800 text-white disabled:text-slate-600 font-black rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:shadow-none transition-all flex items-center justify-center gap-2"
             >

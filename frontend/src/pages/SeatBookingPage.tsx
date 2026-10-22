@@ -73,6 +73,8 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [confirmedBooking, setConfirmedBooking] = useState<any | null>(null);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
+  // State: Currently confirmed held seats for payment checkout
+  const [heldSeats, setHeldSeats] = useState<string[]>([]);
 
   /**
    * Helper function to fetch the current seats from the backend
@@ -82,6 +84,13 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
       const res = await api.get(`/shows/${showId}/seats`);
       setShow(res.data.show);
       setSeats(res.data.seats);
+
+      // If user already held seats for this show (e.g. from previous hold or page refresh), restore them:
+      const existingHeldByMe = res.data.seats.filter((s: Seat) => s.heldByMe).map((s: Seat) => s.seatNumber);
+      if (existingHeldByMe.length > 0) {
+        setSelectedSeats(existingHeldByMe);
+        setHeldSeats(existingHeldByMe);
+      }
     } catch (err: any) {
       console.error('Error loading show seats:', err);
       setErrorMessage(err.response?.data?.error || 'Failed to load seats.');
@@ -104,22 +113,36 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
     socket.emit('join_show', showId);
 
     // 3. Listen for live seat changes from other users
-    socket.on('seats_updated', (data: { showId: number; seats: Seat[] }) => {
+    socket.on('seats_updated', (data: { showId: number; seats: any[] }) => {
       if (data.showId === showId) {
-        setSeats(data.seats);
+        // Tag heldByMe / heldByOther based on current user id
+        const mappedSeats = data.seats.map((s: any) => {
+          const isHeldByMe = user ? s.heldByUserId === user.id : false;
+          return {
+            ...s,
+            heldByMe: isHeldByMe,
+            heldByOther: s.status === 'held' && !isHeldByMe
+          };
+        });
 
-        // If a seat that the user had clicked got taken by someone else in the meantime:
+        setSeats(mappedSeats);
+
+        // Crucial fix: Only remove a seat from selection if taken/booked by SOMEONE ELSE!
+        // Seats held by the CURRENT user must stay selected!
         setSelectedSeats((prevSelected) => {
-          const stillAvailable = prevSelected.filter((seatNum) => {
-            const updatedSeat = data.seats.find((s) => s.seatNumber === seatNum);
-            return updatedSeat && updatedSeat.status === 'available';
+          const stillValid = prevSelected.filter((seatNum) => {
+            const updatedSeat = mappedSeats.find((s) => s.seatNumber === seatNum);
+            if (!updatedSeat) return false;
+            // A seat is valid for me if it is available OR if it is held by ME!
+            const isTakenByOther = updatedSeat.status === 'booked' || (updatedSeat.status === 'held' && !updatedSeat.heldByMe);
+            return !isTakenByOther;
           });
 
-          if (stillAvailable.length < prevSelected.length) {
+          if (stillValid.length < prevSelected.length) {
             setErrorMessage('One or more of your selected seats were just taken by another customer.');
           }
 
-          return stillAvailable;
+          return stillValid;
         });
       }
     });
@@ -129,7 +152,7 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
       socket.emit('leave_show', showId);
       socket.disconnect();
     };
-  }, [showId]);
+  }, [showId, user]);
 
   /**
    * Seat Selection Handler:
@@ -178,6 +201,9 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
         seats: selectedSeats
       });
 
+      const confirmedHeld = res.data.seats || selectedSeats;
+      setHeldSeats(confirmedHeld);
+      setSelectedSeats(confirmedHeld);
       setHoldExpiresAt(res.data.expiresAt);
       setIsPaymentModalOpen(true);
     } catch (err: any) {
@@ -195,14 +221,17 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
    * Flow 5: Payment Success Handler
    */
   const handlePaymentSuccess = async () => {
+    const seatsToBook = heldSeats.length > 0 ? heldSeats : selectedSeats;
     const res = await api.post('/bookings/confirm', {
       showId,
-      seats: selectedSeats
+      seats: seatsToBook
     });
 
     setConfirmedBooking(res.data.booking);
     setIsPaymentModalOpen(false);
     setIsSuccessModalOpen(true);
+    setHeldSeats([]);
+    setSelectedSeats([]);
     // Refresh local seats
     loadShowAndSeats();
   };
@@ -213,6 +242,7 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
   const handleHoldExpired = () => {
     setErrorMessage('Your 5-minute hold on these seats has expired.');
     setSelectedSeats([]);
+    setHeldSeats([]);
     setHoldExpiresAt(null);
     loadShowAndSeats();
   };
@@ -308,8 +338,8 @@ export const SeatBookingPage: React.FC<SeatBookingPageProps> = ({
         movieTitle={show.movieTitle}
         showDate={show.showDate}
         startTime={show.startTime}
-        seats={selectedSeats}
-        totalAmount={selectedSeats.length * show.ticketPrice}
+        seats={heldSeats.length > 0 ? heldSeats : selectedSeats}
+        totalAmount={(heldSeats.length > 0 ? heldSeats.length : selectedSeats.length) * show.ticketPrice}
         expiresAt={holdExpiresAt}
         onPaymentSuccess={handlePaymentSuccess}
         onHoldExpired={handleHoldExpired}
